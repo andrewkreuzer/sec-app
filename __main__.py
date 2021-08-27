@@ -14,6 +14,7 @@ default_vpc_subnets = aws.ec2.get_subnet_ids(vpc_id=default_vpc.id)
 
 ecr = aws.ecr.Repository(
     "sec-app",
+    name="sec-app",
     image_scanning_configuration=aws.ecr.RepositoryImageScanningConfigurationArgs(
         scan_on_push=True,
     ),

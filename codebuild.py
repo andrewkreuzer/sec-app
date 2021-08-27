@@ -30,8 +30,8 @@ sec_app_build_role_policy = aws.iam.RolePolicy(
                 {
                     "Effect": "Allow",
                     "Resource": [
-                        "arn:aws:logs:us-east-2:146427984190:log-group:/aws/codebuild/sec-app-build",
-                        "arn:aws:logs:us-east-2:146427984190:log-group:/aws/codebuild/sec-app-build:*",
+                        "arn:aws:logs:us-east-2:146427984190:log-group:/aws/codebuild/sec_app_build",
+                        "arn:aws:logs:us-east-2:146427984190:log-group:/aws/codebuild/sec_app_build:*",
                     ],
                     "Action": [
                         "logs:CreateLogGroup",
@@ -60,7 +60,7 @@ sec_app_build_role_policy = aws.iam.RolePolicy(
                         "codebuild:BatchPutCodeCoverages",
                     ],
                     "Resource": [
-                        "arn:aws:codebuild:us-east-2:146427984190:report-group/sec-app-build-*"
+                        "arn:aws:codebuild:us-east-2:146427984190:report-group/sec_app_build-*"
                     ],
                 },
             ],
@@ -91,6 +91,7 @@ sec_app_build = aws.codebuild.Project(
         image="aws/codebuild/standard:1.0",
         type="LINUX_CONTAINER",
         image_pull_credentials_type="CODEBUILD",
+        privileged_mode=True,
     ),
     logs_config=aws.codebuild.ProjectLogsConfigArgs(
         cloudwatch_logs=aws.codebuild.ProjectLogsConfigCloudwatchLogsArgs(
