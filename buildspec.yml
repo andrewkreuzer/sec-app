@@ -1,7 +1,11 @@
 version: 0.2
 
 phases:
-  install:
+  pre-build:
     commands:
-      - echo "hello" >> test
-      - cat test
+      - aws ecr get-login-password --region region | docker login --username AWS --password-stdin 146427984190.dkr.ecr.us-east-2.amazonaws.com
+
+  build:
+    commands:
+      - docker build -f docker/Dockerfile docker -t 146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest
+      - docker push 146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest

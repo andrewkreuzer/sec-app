@@ -9,6 +9,13 @@ cluster = aws.ecs.Cluster("cluster")
 default_vpc = aws.ec2.get_vpc(default=True)
 default_vpc_subnets = aws.ec2.get_subnet_ids(vpc_id=default_vpc.id)
 
+ecr = aws.ecr.Repository("sec-app",
+    image_scanning_configuration=aws.ecr.RepositoryImageScanningConfigurationArgs(
+        scan_on_push=True,
+    ),
+    image_tag_mutability="MUTABLE"
+)
+
 # Create a SecurityGroup that permits HTTP ingress and unrestricted egress.
 group = aws.ec2.SecurityGroup(
     "web-secgrp",
