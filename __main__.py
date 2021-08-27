@@ -2,6 +2,9 @@ from pulumi import export, ResourceOptions
 import pulumi_aws as aws
 import json
 
+from codepipeline import *
+from codebuild import *
+
 # Create an ECS cluster to run a container-based service.
 cluster = aws.ecs.Cluster("cluster")
 
@@ -9,11 +12,12 @@ cluster = aws.ecs.Cluster("cluster")
 default_vpc = aws.ec2.get_vpc(default=True)
 default_vpc_subnets = aws.ec2.get_subnet_ids(vpc_id=default_vpc.id)
 
-ecr = aws.ecr.Repository("sec-app",
+ecr = aws.ecr.Repository(
+    "sec-app",
     image_scanning_configuration=aws.ecr.RepositoryImageScanningConfigurationArgs(
         scan_on_push=True,
     ),
-    image_tag_mutability="MUTABLE"
+    image_tag_mutability="MUTABLE",
 )
 
 # Create a SecurityGroup that permits HTTP ingress and unrestricted egress.
@@ -46,8 +50,16 @@ alb = aws.lb.LoadBalancer(
     subnets=default_vpc_subnets.ids,
 )
 
-atg = aws.lb.TargetGroup(
-    "app-tg",
+atg1 = aws.lb.TargetGroup(
+    "app-tg-1",
+    port=80,
+    protocol="HTTP",
+    target_type="ip",
+    vpc_id=default_vpc.id,
+)
+
+atg2 = aws.lb.TargetGroup(
+    "app-tg-2",
     port=80,
     protocol="HTTP",
     target_type="ip",
@@ -55,13 +67,13 @@ atg = aws.lb.TargetGroup(
 )
 
 wl = aws.lb.Listener(
-    "web",
+    "web-1",
     load_balancer_arn=alb.arn,
     port=80,
     default_actions=[
         aws.lb.ListenerDefaultActionArgs(
             type="forward",
-            target_group_arn=atg.arn,
+            target_group_arn=atg1.arn,
         )
     ],
 )
@@ -90,6 +102,12 @@ rpa = aws.iam.RolePolicyAttachment(
     policy_arn="arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
 )
 
+# TODO: pulumi's still struggling, can't even call helper functions
+# Output.concat(ecr.repository_url, ":latest")
+#       you get:
+#           TypeError: Object of type Output is not JSON serializable
+image = "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app-013e680:latest"
+
 # Spin up a load balanced service running our container image.
 task_definition = aws.ecs.TaskDefinition(
     "app-task",
@@ -103,7 +121,7 @@ task_definition = aws.ecs.TaskDefinition(
         [
             {
                 "name": "my-app",
-                "image": "nginx",
+                "image": image,
                 "portMappings": [
                     {"containerPort": 80, "hostPort": 80, "protocol": "tcp"}
                 ],
@@ -125,12 +143,12 @@ service = aws.ecs.Service(
     ),
     load_balancers=[
         aws.ecs.ServiceLoadBalancerArgs(
-            target_group_arn=atg.arn,
+            target_group_arn=atg1.arn,
             container_name="my-app",
             container_port=80,
         )
     ],
-    opts=ResourceOptions(depends_on=[wl]),
+    opts=ResourceOptions(depends_on=[wl], ignore_changes=["task_definition"]),
 )
 
 export("url", alb.dns_name)
