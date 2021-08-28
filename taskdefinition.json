@@ -19,7 +19,7 @@
       "volumesFrom": [],
       "image": "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest",
       "essential": true,
-      "name": "my-app"
+      "name": "sec-app"
     }
   ],
   "compatibilities": [

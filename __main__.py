@@ -4,6 +4,7 @@ import json
 
 from codepipeline import *
 from codebuild import *
+from codedeploy import *
 
 # Create an ECS cluster to run a container-based service.
 cluster = aws.ecs.Cluster("sec-app", name="sec-app")
@@ -119,7 +120,7 @@ task_definition = aws.ecs.TaskDefinition(
     container_definitions=json.dumps(
         [
             {
-                "name": "my-app",
+                "name": "sec-app",
                 "image": image,
                 "portMappings": [
                     {"containerPort": 80, "hostPort": 80, "protocol": "tcp"}
