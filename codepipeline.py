@@ -260,7 +260,7 @@ sec_app = aws.codepipeline.Pipeline(
                     role_arn="",
                     run_order=1,
                     version="1",
-                )
+                ),
             ],
             name="Source",
         ),

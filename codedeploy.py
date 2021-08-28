@@ -18,6 +18,19 @@ sec_app = aws.codedeploy.DeploymentGroup(
         cluster_name="sec-app",
         service_name="sec-app",
     ),
+    deployment_style=aws.codedeploy.DeploymentGroupDeploymentStyleArgs(
+        deployment_option="WITH_TRAFFIC_CONTROL",
+        deployment_type="BLUE_GREEN",
+    ),
+    blue_green_deployment_config=aws.codedeploy.DeploymentGroupBlueGreenDeploymentConfigArgs(
+        deployment_ready_option=aws.codedeploy.DeploymentGroupBlueGreenDeploymentConfigDeploymentReadyOptionArgs(
+            action_on_timeout="CONTINUE_DEPLOYMENT",
+        ),
+        terminate_blue_instances_on_deployment_success=aws.codedeploy.DeploymentGroupBlueGreenDeploymentConfigTerminateBlueInstancesOnDeploymentSuccessArgs(
+            action="TERMINATE",
+            termination_wait_time_in_minutes=5,
+        ),
+    ),
     load_balancer_info=aws.codedeploy.DeploymentGroupLoadBalancerInfoArgs(
         target_group_pair_info=aws.codedeploy.DeploymentGroupLoadBalancerInfoTargetGroupPairInfoArgs(
             prod_traffic_route=aws.codedeploy.DeploymentGroupLoadBalancerInfoTargetGroupPairInfoProdTrafficRouteArgs(
