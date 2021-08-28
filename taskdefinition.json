@@ -1,11 +1,12 @@
 {
-  "taskDefinitionArn": "arn:aws:ecs:us-east-2:146427984190:task-definition/fargate-task-definition:8",
   "executionRoleArn": "arn:aws:iam::146427984190:role/task-exec-role-ff32277",
   "family": "fargate-task-definition",
   "cpu": "256",
   "memory": "512",
   "containerDefinitions": [
     {
+      "image": "<IMAGE1_NAME>",
+      "name": "sec-app"
       "portMappings": [
         {
           "hostPort": 80,
@@ -13,18 +14,8 @@
           "containerPort": 80
         }
       ],
-      "cpu": 0,
-      "environment": [],
-      "mountPoints": [],
-      "volumesFrom": [],
-      "image": "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest",
       "essential": true,
-      "name": "sec-app"
     }
-  ],
-  "compatibilities": [
-    "EC2",
-    "FARGATE"
   ],
   "requiresCompatibilities": [
     "FARGATE"

@@ -3,7 +3,7 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "arn:aws:ecs:us-east-2:146427984190:task-definition/faregate-task-definition:8"
+        TaskDefinition: <TASK_DEFINITION> 
         LoadBalancerInfo:
           ContainerName: "sec-app"
           ContainerPort: 80

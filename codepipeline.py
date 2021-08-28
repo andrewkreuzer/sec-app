@@ -217,13 +217,13 @@ codepipeline_policy_attachment = aws.iam.RolePolicyAttachment(
 github_connection = aws.codestarconnections.Connection("github", name="github")
 sec_app = aws.codepipeline.Pipeline(
     "sec-app",
+    name="sec-app",
+    role_arn=service_role_for_code_pipeline.arn,
     artifact_store=aws.codepipeline.PipelineArtifactStoreArgs(
         location="codepipeline-us-east-2-141992872046",
         region="",
         type="S3",
     ),
-    name="sec-app",
-    role_arn=service_role_for_code_pipeline.arn,
     stages=[
         aws.codepipeline.PipelineStageArgs(
             actions=[
@@ -241,6 +241,21 @@ sec_app = aws.codepipeline.Pipeline(
                     output_artifacts=["SourceArtifact"],
                     owner="AWS",
                     provider="CodeStarSourceConnection",
+                    region="us-east-2",
+                    role_arn="",
+                    run_order=1,
+                    version="1",
+                ),
+                aws.codepipeline.PipelineStageActionArgs(
+                    category="Source",
+                    configuration={
+                        "RepositoryName": "sec-app",
+                        "ImageTag": "latest",
+                    },
+                    name="Image",
+                    output_artifacts=["ImageArtifact"],
+                    owner="AWS",
+                    provider="ECR",
                     region="us-east-2",
                     role_arn="",
                     run_order=1,
@@ -266,7 +281,7 @@ sec_app = aws.codepipeline.Pipeline(
                     role_arn="",
                     run_order=1,
                     version="1",
-                )
+                ),
             ],
             name="Build",
         ),
@@ -300,10 +315,10 @@ sec_app = aws.codepipeline.Pipeline(
                         "AppSpecTemplatePath": "appspec.yml",
                         "TaskDefinitionTemplatePath": "taskdefinition.json",
                         "TaskDefinitionTemplateArtifact": "SourceArtifact",
-                        "Image1ArtifactName": "SourceArtifact",
-                        "Image1ContainerName": "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest",
+                        "Image1ArtifactName": "ImageArtifact",
+                        "Image1ContainerName": "IMAGE1_NAME",
                     },
-                    input_artifacts=["SourceArtifact"],
+                    input_artifacts=["SourceArtifact", "ImageArtifact"],
                     name="Deploy",
                     namespace="",
                     output_artifacts=[],
