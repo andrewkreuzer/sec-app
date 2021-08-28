@@ -87,6 +87,13 @@ sec_app_build = aws.codebuild.Project(
     artifacts=aws.codebuild.ProjectArtifactsArgs(
         type="CODEPIPELINE",
     ),
+    cache=aws.codebuild.ProjectCacheArgs(
+        type="LOCAL",
+        modes=[
+            "LOCAL_DOCKER_LAYER_CACHE",
+            "LOCAL_SOURCE_CACHE",
+        ],
+    ),
     environment=aws.codebuild.ProjectEnvironmentArgs(
         compute_type="BUILD_GENERAL1_SMALL",
         image="aws/codebuild/standard:5.0",
