@@ -80,6 +80,7 @@ test_attach = aws.iam.RolePolicyAttachment(
 
 sec_app_build = aws.codebuild.Project(
     "sec_app_build",
+    name="sec_app_build",
     description="sec-app builder",
     build_timeout=5,
     service_role=sec_app_build_role.arn,
@@ -88,7 +89,7 @@ sec_app_build = aws.codebuild.Project(
     ),
     environment=aws.codebuild.ProjectEnvironmentArgs(
         compute_type="BUILD_GENERAL1_SMALL",
-        image="aws/codebuild/standard:1.0",
+        image="aws/codebuild/standard:5.0",
         type="LINUX_CONTAINER",
         image_pull_credentials_type="CODEBUILD",
         privileged_mode=True,

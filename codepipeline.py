@@ -289,5 +289,27 @@ sec_app = aws.codepipeline.Pipeline(
             ],
             name="approval",
         ),
+        aws.codepipeline.PipelineStageArgs(
+            actions=[
+                aws.codepipeline.PipelineStageActionArgs(
+                    category="Deploy",
+                    configuration={
+                        "ApplicationName": "sec-app",
+                        "DeploymentGroupName": "sec-app",
+                    },
+                    input_artifacts=["SourceArtifact"],
+                    name="Deploy",
+                    namespace="",
+                    output_artifacts=[],
+                    owner="AWS",
+                    provider="CodeDeploy",
+                    region="us-east-2",
+                    role_arn="",
+                    run_order=1,
+                    version="1",
+                )
+            ],
+            name="Deploy",
+        ),
     ],
 )

@@ -6,7 +6,7 @@ from codepipeline import *
 from codebuild import *
 
 # Create an ECS cluster to run a container-based service.
-cluster = aws.ecs.Cluster("cluster")
+cluster = aws.ecs.Cluster("sec-app", name="sec-app")
 
 # Read back the default VPC and public subnets, which we will use.
 default_vpc = aws.ec2.get_vpc(default=True)
@@ -107,11 +107,9 @@ rpa = aws.iam.RolePolicyAttachment(
 # Output.concat(ecr.repository_url, ":latest")
 #       you get:
 #           TypeError: Object of type Output is not JSON serializable
-image = "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app-013e680:latest"
-
-# Spin up a load balanced service running our container image.
+image = "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest"
 task_definition = aws.ecs.TaskDefinition(
-    "app-task",
+    "sec-app-task",
     family="fargate-task-definition",
     cpu="256",
     memory="512",
@@ -132,11 +130,13 @@ task_definition = aws.ecs.TaskDefinition(
 )
 
 service = aws.ecs.Service(
-    "app-svc",
+    "sec-app",
+    name="sec-app",
     cluster=cluster.arn,
     desired_count=3,
     launch_type="FARGATE",
     task_definition=task_definition.arn,
+    deployment_controller=aws.ecs.ServiceDeploymentControllerArgs(type="CODE_DEPLOY"),
     network_configuration=aws.ecs.ServiceNetworkConfigurationArgs(
         assign_public_ip=True,
         subnets=default_vpc_subnets.ids,
