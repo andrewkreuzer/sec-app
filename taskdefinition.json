@@ -6,7 +6,7 @@
   "containerDefinitions": [
     {
       "image": "<IMAGE1_NAME>",
-      "name": "sec-app"
+      "name": "sec-app",
       "portMappings": [
         {
           "hostPort": 80,
