@@ -14,7 +14,7 @@
           "containerPort": 80
         }
       ],
-      "essential": true,
+      "essential": true
     }
   ],
   "requiresCompatibilities": [
@@ -22,5 +22,5 @@
   ],
   "networkMode": "awsvpc",
   "revision": 8,
-  "status": "ACTIVE",
+  "status": "ACTIVE"
 }
