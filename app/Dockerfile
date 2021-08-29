@@ -1,4 +1,4 @@
-FROM public.ecr.aws/bitnami/golang:latest
+FROM public.ecr.aws/bitnami/golang:latest as build
 
 WORKDIR /app
 
@@ -15,7 +15,8 @@ COPY ./index.html /usr/share/nginx/html/index.html
 
 
 FROM alpine:latest
-COPY web
+WORKDIR /app
+COPY --from=build /app/web web
 
 EXPOSE 80
 CMD ["./web"]
