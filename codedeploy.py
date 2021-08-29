@@ -3,6 +3,7 @@ import json
 import pulumi
 import pulumi_aws as aws
 
+
 def create_code_deploy(cluster_name, service_name, tg1_name, tg2_name, wl_arn):
     kreuzer_service_role_for_code_deploy_ecs = aws.iam.Role(
         "KreuzerServiceRoleForCodeDeployECS",
@@ -42,7 +43,6 @@ def create_code_deploy(cluster_name, service_name, tg1_name, tg2_name, wl_arn):
         name="sec-app",
     )
 
-
     sec_app = aws.codedeploy.DeploymentGroup(
         "sec-app",
         app_name="sec-app",
@@ -68,9 +68,7 @@ def create_code_deploy(cluster_name, service_name, tg1_name, tg2_name, wl_arn):
         load_balancer_info=aws.codedeploy.DeploymentGroupLoadBalancerInfoArgs(
             target_group_pair_info=aws.codedeploy.DeploymentGroupLoadBalancerInfoTargetGroupPairInfoArgs(
                 prod_traffic_route=aws.codedeploy.DeploymentGroupLoadBalancerInfoTargetGroupPairInfoProdTrafficRouteArgs(
-                    listener_arns=[
-                        wl_arn
-                    ],
+                    listener_arns=[wl_arn],
                 ),
                 target_groups=[
                     aws.codedeploy.DeploymentGroupLoadBalancerInfoTargetGroupPairInfoTargetGroupArgs(

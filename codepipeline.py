@@ -3,6 +3,7 @@ import json
 import pulumi
 import pulumi_aws as aws
 
+
 def create_code_pipeline(sec_app_build_name):
     service_role_for_code_pipeline = aws.iam.Role(
         "KreuzerServiceRoleForCodePipeline",
@@ -168,7 +169,11 @@ def create_code_pipeline(sec_app_build_name):
                         "Action": ["cloudformation:ValidateTemplate"],
                         "Resource": "*",
                     },
-                    {"Effect": "Allow", "Action": ["ecr:DescribeImages"], "Resource": "*"},
+                    {
+                        "Effect": "Allow",
+                        "Action": ["ecr:DescribeImages"],
+                        "Resource": "*",
+                    },
                     {
                         "Effect": "Allow",
                         "Action": [
@@ -199,7 +204,9 @@ def create_code_pipeline(sec_app_build_name):
         role=service_role_for_code_pipeline.name,
     )
 
-    github_connection = aws.codestarconnections.get_connection(arn="arn:aws:codestar-connections:us-east-2:146427984190:connection/c3a9a47e-a2eb-432c-b79a-b9c4ca5b0f3d")
+    github_connection = aws.codestarconnections.get_connection(
+        arn="arn:aws:codestar-connections:us-east-2:146427984190:connection/c3a9a47e-a2eb-432c-b79a-b9c4ca5b0f3d"
+    )
     sec_app = aws.codepipeline.Pipeline(
         "sec-app",
         name="sec-app",
@@ -286,7 +293,7 @@ def create_code_pipeline(sec_app_build_name):
                             "TaskDefinitionTemplatePath": "taskdefinition.json",
                             "TaskDefinitionTemplateArtifact": "SourceArtifact",
                             "Image1ArtifactName": "ImageArtifact",
-                            "Image1ContainerName": "IMAGE1_NAME"
+                            "Image1ContainerName": "IMAGE1_NAME",
                         },
                         input_artifacts=["SourceArtifact", "ImageArtifact"],
                         name="Deploy",

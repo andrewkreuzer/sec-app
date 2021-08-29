@@ -1,6 +1,6 @@
-from pulumi import export
 import pulumi_aws as aws
 import json
+
 
 def create_code_build():
     sec_app_build_role = aws.iam.Role(
@@ -103,14 +103,12 @@ def create_code_build():
             privileged_mode=True,
             environment_variables=[
                 aws.codebuild.ProjectEnvironmentEnvironmentVariableArgs(
-                    name="REPO",
-                    value="146427984190.dkr.ecr.us-east-2.amazonaws.com"
+                    name="REPO", value="146427984190.dkr.ecr.us-east-2.amazonaws.com"
                 ),
                 aws.codebuild.ProjectEnvironmentEnvironmentVariableArgs(
-                    name="IMAGE",
-                    value="sec-app"
-                )
-            ]
+                    name="IMAGE", value="sec-app"
+                ),
+            ],
         ),
         logs_config=aws.codebuild.ProjectLogsConfigArgs(
             cloudwatch_logs=aws.codebuild.ProjectLogsConfigCloudwatchLogsArgs(

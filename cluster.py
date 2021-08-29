@@ -3,12 +3,9 @@ import json
 from pulumi import export, ResourceOptions
 import pulumi_aws as aws
 
-def create_ecs_cluster():
-    cluster = aws.ecs.Cluster("sec-app", name="sec-app")
 
-    # Read back the default VPC and public subnets, which we will use.
-    default_vpc = aws.ec2.get_vpc(default=True)
-    default_vpc_subnets = aws.ec2.get_subnet_ids(vpc_id=default_vpc.id)
+def create_ecs_cluster(vpc_id, vpc_subnets_ids):
+    cluster = aws.ecs.Cluster("sec-app", name="sec-app")
 
     ecr = aws.ecr.Repository(
         "sec-app",
@@ -22,7 +19,7 @@ def create_ecs_cluster():
     # Create a SecurityGroup that permits HTTP ingress and unrestricted egress.
     group = aws.ec2.SecurityGroup(
         "web-secgrp",
-        vpc_id=default_vpc.id,
+        vpc_id=vpc_id,
         description="Enable HTTP access",
         ingress=[
             aws.ec2.SecurityGroupIngressArgs(
@@ -46,7 +43,7 @@ def create_ecs_cluster():
     alb = aws.lb.LoadBalancer(
         "app-lb",
         security_groups=[group.id],
-        subnets=default_vpc_subnets.ids,
+        subnets=vpc_subnets_ids,
     )
 
     atg1 = aws.lb.TargetGroup(
@@ -54,10 +51,8 @@ def create_ecs_cluster():
         port=80,
         protocol="HTTP",
         target_type="ip",
-        vpc_id=default_vpc.id,
-        health_check=aws.lb.TargetGroupHealthCheckArgs(
-            path="/health"
-        ),
+        vpc_id=vpc_id,
+        health_check=aws.lb.TargetGroupHealthCheckArgs(path="/health"),
     )
 
     atg2 = aws.lb.TargetGroup(
@@ -65,10 +60,8 @@ def create_ecs_cluster():
         port=80,
         protocol="HTTP",
         target_type="ip",
-        vpc_id=default_vpc.id,
-        health_check=aws.lb.TargetGroupHealthCheckArgs(
-            path="/health"
-        ),
+        vpc_id=vpc_id,
+        health_check=aws.lb.TargetGroupHealthCheckArgs(path="/health"),
     )
 
     wl = aws.lb.Listener(
@@ -137,10 +130,12 @@ def create_ecs_cluster():
         desired_count=3,
         launch_type="FARGATE",
         task_definition=task_definition.arn,
-        deployment_controller=aws.ecs.ServiceDeploymentControllerArgs(type="CODE_DEPLOY"),
+        deployment_controller=aws.ecs.ServiceDeploymentControllerArgs(
+            type="CODE_DEPLOY"
+        ),
         network_configuration=aws.ecs.ServiceNetworkConfigurationArgs(
             assign_public_ip=True,
-            subnets=default_vpc_subnets.ids,
+            subnets=vpc_subnets_ids,
             security_groups=[group.id],
         ),
         load_balancers=[
@@ -156,4 +151,3 @@ def create_ecs_cluster():
     export("url", alb.dns_name)
 
     return cluster.name, service.name, atg1.name, atg2.name, wl.arn
-

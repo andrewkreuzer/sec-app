@@ -17,6 +17,12 @@ func main() {
   }
 
   r := gin.Default()
+  r.LoadHTMLFiles("index.html")
+
+  r.GET("/", func(c *gin.Context) {
+    c.HTML(http.StatusOK, "index.html", nil)
+  })
+
   r.GET("/health", func(c *gin.Context) {
     c.Status(http.StatusOK)
   })
