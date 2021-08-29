@@ -1,5 +1,5 @@
 {
-  "executionRoleArn": "arn:aws:iam::146427984190:role/task-exec-role-ff32277",
+  "executionRoleArn": "arn:aws:iam::146427984190:role/KreuzerServiceRoleForECSTaskExec",
   "family": "fargate-task-definition",
   "cpu": "256",
   "memory": "512",
