@@ -101,6 +101,16 @@ def create_code_build():
             type="LINUX_CONTAINER",
             image_pull_credentials_type="CODEBUILD",
             privileged_mode=True,
+            environment_variables=[
+                aws.codebuild.ProjectEnvironmentEnvironmentVariableArgs(
+                    name="REPO",
+                    value="146427984190.dkr.ecr.us-east-2.amazonaws.com"
+                ),
+                aws.codebuild.ProjectEnvironmentEnvironmentVariableArgs(
+                    name="IMAGE",
+                    value="sec-app"
+                )
+            ]
         ),
         logs_config=aws.codebuild.ProjectLogsConfigArgs(
             cloudwatch_logs=aws.codebuild.ProjectLogsConfigCloudwatchLogsArgs(

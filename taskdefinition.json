@@ -5,7 +5,7 @@
   "memory": "512",
   "containerDefinitions": [
     {
-      "image": "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest",
+      "image": <IMAGE1_NAME>,
       "name": "sec-app",
       "portMappings": [
         {
