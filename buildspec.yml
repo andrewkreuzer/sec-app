@@ -7,5 +7,5 @@ phases:
 
   build:
     commands:
-      - docker build -f app/Dockerfile -t 146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest
+      - docker build -f app/Dockerfile app -t 146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest
       - docker push 146427f 84190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest
