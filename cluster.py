@@ -55,6 +55,9 @@ def create_ecs_cluster():
         protocol="HTTP",
         target_type="ip",
         vpc_id=default_vpc.id,
+        health_check=aws.lb.TargetGroupHealthCheckArgs(
+            path="/health"
+        ),
     )
 
     atg2 = aws.lb.TargetGroup(
@@ -63,6 +66,9 @@ def create_ecs_cluster():
         protocol="HTTP",
         target_type="ip",
         vpc_id=default_vpc.id,
+        health_check=aws.lb.TargetGroupHealthCheckArgs(
+            path="/health"
+        ),
     )
 
     wl = aws.lb.Listener(
@@ -149,5 +155,5 @@ def create_ecs_cluster():
 
     export("url", alb.dns_name)
 
-    return cluster.name, service.name
+    return cluster.name, service.name, atg1.name, atg2.name, wl.arn
 
