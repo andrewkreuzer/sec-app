@@ -1,4 +1,5 @@
 import pulumi
+from pulumi.invoke import InvokeOptions
 import pulumi_aws as aws
 
 
@@ -16,9 +17,8 @@ def create_vpc():
         vpc_id=vpc.id,
     )
 
-    route_table = aws.ec2.get_route_table(route_table_id=vpc.main_route_table_id)
     igw_route = aws.ec2.Route("igw_route",
-        route_table_id=route_table.id,
+        route_table_id=vpc.main_route_table_id,
         destination_cidr_block="0.0.0.0/0",
         gateway_id=igw.id
     )
