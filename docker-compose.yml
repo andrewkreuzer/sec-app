@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # sec-app:
+  #   build: ./app
+  #   networks:
+  #     - sec-app
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: foobarbaz
+    ports:
+      - 3307:3306
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
+      - ./mysql/data:/var/lib/mysql
+    networks:
+      - sec-app
+
+networks:
+  sec-app:
+    name: sec-app

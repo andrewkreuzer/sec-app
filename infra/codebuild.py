@@ -116,8 +116,7 @@ def create_code_build():
             ),
         ),
         source=aws.codebuild.ProjectSourceArgs(
-            type="CODEPIPELINE",
-            buildspec="infra/buildspec.yml"
+            type="CODEPIPELINE", buildspec="infra/buildspec.yml"
         ),
     )
 
