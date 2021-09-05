@@ -24,5 +24,5 @@ COPY --from=build /app/.env ./.env
 
 COPY ./index.html index.html
 
-EXPOSE 80
+EXPOSE 8080
 CMD ["./web"]

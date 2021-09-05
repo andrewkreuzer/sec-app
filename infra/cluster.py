@@ -182,7 +182,7 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                     "name": "sec-app",
                     "image": image,
                     "portMappings": [
-                        {"containerPort": 80, "hostPort": 80, "protocol": "tcp"}
+                        {"containerPort": 8080, "hostPort": 80, "protocol": "tcp"}
                     ],
                     "logConfiguration": { 
                       "logDriver": "awslogs",
