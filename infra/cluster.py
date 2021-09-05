@@ -101,6 +101,25 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
         policy_arn="arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
     )
 
+    iam_db_auth = aws.iam.RolePolicy(
+        "iam_db_auth_role_policy",
+        role=role.name,
+        policy=json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": ["rds-db:connect"],
+                        "Resource": [
+                            "arn:aws:rds-db:us-east-2:146427984190:dbuser:*/*"
+                        ],
+                    }
+                ],
+            }
+        ),
+    )
+
     image = "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest"
     task_definition = aws.ecs.TaskDefinition(
         "sec-app-task",

@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
-  "encoding/json"
-  "fmt"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/rds/auth"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -20,20 +24,71 @@ type User struct {
   Password string
 }
 
-func main() {
-  err := godotenv.Load()
-  if err != nil {
-    log.Fatal("Error loading .env file")
+type DB struct {
+  name string
+  username string
+  password string
+  host string
+  port string
+  opts string
+}
+
+func db() (*sql.DB) {
+  db := DB {
+    name: os.Getenv("DB_NAME"),
+    username: os.Getenv("DB_USER"),
+    host: os.Getenv("DB_HOST"),
+    port: os.Getenv("DB_PORT"),
   }
 
-  db, err := sql.Open("mysql", "root:foobarbaz@tcp(localhost:3307)/sec-app")
+  if os.Getenv("ENVIRONMENT") != "dev" {
+    db_ctx := context.Background()
+    cfg, err := config.LoadDefaultConfig(db_ctx)
+    if err != nil {
+      panic("configuration error: " + err.Error())
+    }
+
+    authenticationToken, err := auth.BuildAuthToken(
+      db_ctx,
+      fmt.Sprintf("%s:%s", db.host, "3306"),
+      "us-east-2",
+      db.username,
+      cfg.Credentials,
+    )
+    if err != nil {
+      panic("failed to create authentication token: " + err.Error())
+    }
+
+    db.opts = "?tls=true&allowCleartextPasswords=true" 
+    db.password = authenticationToken
+  } else {
+    db.password = os.Getenv("DB_PASS")
+  }
+
+  dsn := fmt.Sprintf(
+    "%s:%s@tcp(%s:%s)/%s%s",
+    db.username, db.password, db.host, db.port, db.name, db.opts,
+  )
+
+  conn, err := sql.Open("mysql", dsn)
   if err != nil {
     panic(err)
   }
 
-  db.SetConnMaxLifetime(time.Minute * 3)
-  db.SetMaxOpenConns(10)
-  db.SetMaxIdleConns(10)
+  conn.SetConnMaxLifetime(time.Minute * 3)
+  conn.SetMaxOpenConns(10)
+  conn.SetMaxIdleConns(10)
+
+  return conn
+}
+
+func main() {
+  err := godotenv.Load()
+  if err != nil {
+    log.Fatal("Environment loading failed")
+  }
+
+  conn := db()
 
   r := gin.Default()
   r.LoadHTMLFiles("index.html")
@@ -46,16 +101,40 @@ func main() {
     c.Status(http.StatusOK)
   })
 
+  r.GET("/users", func(c *gin.Context) {
+    rows, err := conn.Query("select * from Users")
+    if err != nil {
+      fmt.Println("error:", err)
+    }
+
+    users := []string{}
+    for rows.Next() {
+      var (
+        id   int64
+        name string
+        password string
+      )
+      if err := rows.Scan(&id, &name, &password); err != nil {
+        log.Fatal(err)
+      }
+      users = append(users, name)
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+      "users": users,
+    })
+  })
+
   r.POST("/login", func(c *gin.Context) {
     body, _ := ioutil.ReadAll(c.Request.Body)
     var requestedUser User
-    err = json.Unmarshal(body, &requestedUser)
+    err := json.Unmarshal(body, &requestedUser)
     if err != nil {
         fmt.Println("error:", err)
     }
 
     var dbUser User
-    err = db.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
+    err = conn.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
 
     log.Println(dbUser.Password, requestedUser.Password)
     if (dbUser.Password == requestedUser.Password) {
@@ -73,28 +152,35 @@ func main() {
   r.POST("/signup", func(c *gin.Context) {
     body, _ := ioutil.ReadAll(c.Request.Body)
     var user User
-    err = json.Unmarshal(body, &user)
+    err := json.Unmarshal(body, &user)
     if err != nil {
         fmt.Println("error:", err)
     }
 
-    stmt, err := db.Prepare("insert into Users values (NUll, ?, ?)")
+    var dbUser User
+    err = conn.QueryRow("select ID, Username from Users where Username=?", user.Name).Scan(&dbUser.Id, &dbUser.Name)
     if err != nil {
-        fmt.Println("error:", err)
+      log.Println(err)
     }
 
-    // log.Println(user.Name, user.Password)
+    if dbUser.Name == user.Name {
+      c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+        "failed": "Username taken",
+      })
+
+      return
+    }
+
+    stmt, err := conn.Prepare("insert into Users values (NUll, ?, ?)")
+    if err != nil {
+      fmt.Println("error:", err)
+    }
+
     stmt.Exec(user.Name, user.Password)
     defer stmt.Close()
 
     c.JSON(http.StatusOK, gin.H{
       "body": user.Name,
-    })
-  })
-
-  r.GET("/ping", func(c *gin.Context) {
-    c.JSON(http.StatusOK, gin.H{
-      "message": "pong",
     })
   })
 

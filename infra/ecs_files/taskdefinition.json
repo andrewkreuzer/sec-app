@@ -1,26 +1,26 @@
 {
-  "executionRoleArn": "arn:aws:iam::146427984190:role/KreuzerServiceRoleForECSTaskExec",
-  "family": "fargate-task-definition",
-  "cpu": "256",
-  "memory": "512",
-  "containerDefinitions": [
-    {
-      "image": <IMAGE1_NAME>,
-      "name": "sec-app",
-      "portMappings": [
+    "executionRoleArn": "arn:aws:iam::146427984190:role/KreuzerServiceRoleForECSTaskExec",
+    "family": "fargate-task-definition",
+    "cpu": "256",
+    "memory": "512",
+    "containerDefinitions": [
         {
-          "hostPort": 80,
-          "protocol": "tcp",
-          "containerPort": 80
+            "image": <IMAGE1_NAME>,
+            "name": "sec-app",
+            "portMappings": [
+                {
+                    "hostPort": 80,
+                    "protocol": "tcp",
+                    "containerPort": 80
+                }
+            ],
+            "essential": true
         }
-      ],
-      "essential": true
-    }
-  ],
-  "requiresCompatibilities": [
-    "FARGATE"
-  ],
-  "networkMode": "awsvpc",
-  "revision": 8,
-  "status": "ACTIVE"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "networkMode": "awsvpc",
+    "revision": 8,
+    "status": "ACTIVE"
 }

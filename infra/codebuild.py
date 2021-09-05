@@ -69,14 +69,10 @@ def create_code_build():
         ),
     )
 
-    aws_ec2_container_power_user_policy = aws.iam.get_policy(
-        arn="arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
-    )
-
     test_attach = aws.iam.RolePolicyAttachment(
         "KreuzerServiceRoleForSecAppCodebuildBuildAttachment",
         role=sec_app_build_role.name,
-        policy_arn=aws_ec2_container_power_user_policy.arn,
+        policy_arn="arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser",
     )
 
     sec_app_build = aws.codebuild.Project(

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+RDS_HOST=secapp0fc5458.cjfwtxly4km8.us-east-2.rds.amazonaws.com
+
+RDS_PASS=$(aws rds generate-db-auth-token \
+   --hostname $RDS_HOST \
+   --port 3306 \
+   --region us-east-2 \
+   --username migrationsLambda
+ )
+
+ echo $RDS_PASS
+
+mysql \
+  --host=$RDS_HOST \
+  --port 3306 \
+  --enable-cleartext-plugin \
+  --user=migrationsLambda \
+  --ssl-ca=$HOME/Downloads/global-bundle.pem \
+  --password=$RDS_PASS

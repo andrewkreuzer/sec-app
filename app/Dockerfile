@@ -14,7 +14,12 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o web .
 
 
 FROM alpine:latest
-WORKDIR /app
+RUN apk -U upgrade
+
+RUN adduser -h /home/web -u 1000 -D web
+USER web
+
+WORKDIR /home/web
 COPY --from=build /app/web ./web
 COPY --from=build /app/.env ./.env
 

@@ -14,7 +14,7 @@ cluster_name, service_name, tg1_name, tg2_name, wl_arn = create_ecs_cluster(
 )
 
 create_secret()
-create_database(vpc_private_subnet_ids=vpc_private_subnet_ids)
+db_host = create_database(vpc_private_subnet_ids=vpc_private_subnet_ids, vpc_id=vpc_id)
 
 sec_app_build_name = create_code_build()
 create_code_deploy(
@@ -24,5 +24,5 @@ create_code_deploy(
     tg2_name=tg2_name,
     wl_arn=wl_arn,
 )
-create_migrations_lambda(vpc_id=vpc_id, private_subnet_ids=vpc_private_subnet_ids)
+create_migrations_lambda(vpc_id=vpc_id, private_subnet_ids=vpc_private_subnet_ids, db_host=db_host)
 create_code_pipeline(sec_app_build_name=sec_app_build_name)
