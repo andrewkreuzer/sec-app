@@ -14,7 +14,7 @@
                     "containerPort": 80
                 }
             ],
-            "essential": true
+            "essential": true,
             "logConfiguration": { 
               "logDriver": "awslogs",
               "options": { 
