@@ -12,6 +12,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+  "github.com/aws/aws-sdk-go/aws"
+  "github.com/aws/aws-sdk-go/aws/session"
+  "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go-v2/feature/rds/auth"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -46,6 +49,25 @@ func db() (*sql.DB) {
     cfg, err := config.LoadDefaultConfig(db_ctx)
     if err != nil {
       panic("configuration error: " + err.Error())
+    }
+
+    sess := session.Must(session.NewSessionWithOptions(session.Options{
+    SharedConfigState: session.SharedConfigEnable,
+    }))
+    svc := s3.New(sess, &aws.Config{
+      Region: aws.String("us-east-2"),
+    })
+
+    result, err := svc.ListBuckets(nil)
+
+    if err != nil {
+      log.Default("Unable to list buckets, %v", err)
+    }
+
+    fmt.Println("My buckets now are:\n")
+
+    for _, b := range result.Buckets {
+      fmt.Printf(aws.StringValue(b.Name) + "\n")
     }
 
     authenticationToken, err := auth.BuildAuthToken(

@@ -110,6 +110,15 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                     {
                         "Effect": "Allow",
                         "Action": [
+                            "s3:*",
+                        ],
+                        "Resource": [
+                            "*",
+                        ],
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": [
                             "logs:CreateLogGroup",
                             "logs:CreateLogStream",
                             "logs:PutLogEvents",

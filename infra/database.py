@@ -20,4 +20,17 @@ def create_database(vpc_private_subnet_ids, vpc_id):
         iam_database_authentication_enabled=True,
     )
 
+    sec_app_zone = aws.route53.get_zone(
+        name="sec-app.internal",
+        private_zone=True
+    )
+
+    db_route = aws.route53.Record("db_route",
+        name="db.sec-app.internal",
+        records=[db.address],
+        ttl=300,
+        type="CNAME",
+        zone_id="Z07288891LWDKJYRV0WZV",
+    )
+
     return db.address
