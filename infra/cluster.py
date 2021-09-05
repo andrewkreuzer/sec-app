@@ -76,7 +76,6 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
         ],
     )
 
-    # Create an IAM role that can be used by our service's task.
     role = aws.iam.Role(
         "KreuzerServiceRoleForECSTaskExec",
         name="KreuzerServiceRoleForECSTaskExec",
