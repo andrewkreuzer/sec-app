@@ -20,7 +20,6 @@
               "options": { 
                  "awslogs-group" : "/ecs/fargate/sec-app",
                  "awslogs-region": "us-east-2",
-                 "awslogs-create-group": true,
                  "awslogs-stream-prefix": "ecs"
               }
            }

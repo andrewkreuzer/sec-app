@@ -1,6 +1,6 @@
 import json
 
-from pulumi import export, ResourceOptions
+from pulumi import export, ResourceOptions, Output
 import pulumi_aws as aws
 
 
@@ -144,6 +144,11 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
         ),
     )
 
+    ecs_log_group = aws.cloudwatch.LogGroup(
+        "ecs_logs",
+        name="/ecs/fargate/sec-app"
+    )
+
     image = "146427984190.dkr.ecr.us-east-2.amazonaws.com/sec-app:latest"
     task_definition = aws.ecs.TaskDefinition(
         "sec-app-task",
@@ -161,6 +166,14 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                     "portMappings": [
                         {"containerPort": 80, "hostPort": 80, "protocol": "tcp"}
                     ],
+                    "logConfiguration": { 
+                      "logDriver": "awslogs",
+                      "options": { 
+                          "awslogs-group" : "/ecs/farget/sec-app",
+                         "awslogs-region": "us-east-2",
+                         "awslogs-stream-prefix": "ecs"
+                      }
+                   }
                 }
             ]
         ),
