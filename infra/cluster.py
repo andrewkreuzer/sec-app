@@ -101,6 +101,30 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
         policy_arn="arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
     )
 
+    cloudwatch_logging = aws.iam.RolePolicy(
+        "cloudwatch_logging",
+        role=role.name,
+        policy=json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "logs:CreateLogGroup",
+                            "logs:CreateLogStream",
+                            "logs:PutLogEvents",
+                        ],
+                        "Resource": [
+                            "arn:aws:logs:us-east-2:146427984190:log-group:/ecs/fargate/sec-app",
+                            "arn:aws:logs:us-east-2:146427984190:log-group:/ecs/fargate/sec-app:*"
+                        ],
+                    }
+                ],
+            }
+        ),
+    )
+
     iam_db_auth = aws.iam.RolePolicy(
         "iam_db_auth_role_policy",
         role=role.name,
