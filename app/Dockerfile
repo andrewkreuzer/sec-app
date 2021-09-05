@@ -16,7 +16,7 @@ FROM ubuntu:latest
 RUN apt update && apt upgrade
 
 RUN useradd -d /home/web -u 1000 web
-USER web
+# USER web
 
 WORKDIR /home/web
 COPY --from=build /app/web ./web
@@ -24,5 +24,5 @@ COPY --from=build /app/.env ./.env
 
 COPY ./index.html index.html
 
-EXPOSE 8080
+EXPOSE 80
 CMD ["./web"]
