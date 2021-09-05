@@ -3,6 +3,7 @@ module sec-app
 go 1.16
 
 require (
+	github.com/aws/aws-sdk-go v1.40.37
 	github.com/aws/aws-sdk-go-v2/config v1.8.0
 	github.com/aws/aws-sdk-go-v2/feature/rds/auth v1.1.6
 	github.com/gin-gonic/gin v1.7.4

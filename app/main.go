@@ -61,7 +61,7 @@ func db() (*sql.DB) {
     result, err := svc.ListBuckets(nil)
 
     if err != nil {
-      log.Default("Unable to list buckets, %v", err)
+      log.Println("Unable to list buckets, %v", err)
     }
 
     fmt.Println("My buckets now are:\n")
