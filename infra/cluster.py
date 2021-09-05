@@ -110,15 +110,6 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                     {
                         "Effect": "Allow",
                         "Action": [
-                            "s3:*",
-                        ],
-                        "Resource": [
-                            "*",
-                        ],
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Action": [
                             "logs:CreateLogGroup",
                             "logs:CreateLogStream",
                             "logs:PutLogEvents",
@@ -133,13 +124,38 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
         ),
     )
 
+    task_role = aws.iam.Role(
+        "KreuzerServiceRoleForECSTaskSecApp",
+        name="KreuzerServiceRoleForECSTaskSecApp",
+        assume_role_policy=json.dumps(
+            {
+                "Version": "2008-10-17",
+                "Statement": [
+                    {
+                        "Sid": "",
+                        "Effect": "Allow",
+                        "Principal": {"Service": "ecs-tasks.amazonaws.com"},
+                        "Action": "sts:AssumeRole",
+                    }
+                ],
+            }
+        ),
+    )
+
     iam_db_auth = aws.iam.RolePolicy(
         "iam_db_auth_role_policy",
-        role=role.name,
+        role=task_role.name,
         policy=json.dumps(
             {
                 "Version": "2012-10-17",
                 "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": ["s3:*"],
+                        "Resource": [
+                            "*"
+                        ],
+                    },
                     {
                         "Effect": "Allow",
                         "Action": ["rds-db:connect"],
@@ -166,6 +182,7 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
         network_mode="awsvpc",
         requires_compatibilities=["FARGATE"],
         execution_role_arn=role.arn,
+        task_role_arn=task_role.arn,
         container_definitions=json.dumps(
             [
                 {
