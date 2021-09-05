@@ -39,31 +39,33 @@ func db() (*sql.DB) {
     username: os.Getenv("DB_USER"),
     host: os.Getenv("DB_HOST"),
     port: os.Getenv("DB_PORT"),
+
+    password: os.Getenv("DB_PASS"),
   }
 
-  if os.Getenv("ENVIRONMENT") != "dev" {
-    db_ctx := context.Background()
-    cfg, err := config.LoadDefaultConfig(db_ctx)
-    if err != nil {
-      panic("configuration error: " + err.Error())
-    }
+  // if os.Getenv("ENVIRONMENT") != "dev" {
+  //   db_ctx := context.Background()
+  //   cfg, err := config.LoadDefaultConfig(db_ctx)
+  //   if err != nil {
+  //     panic("configuration error: " + err.Error())
+  //   }
 
-    authenticationToken, err := auth.BuildAuthToken(
-      db_ctx,
-      fmt.Sprintf("%s:%s", db.host, "3306"),
-      "us-east-2",
-      db.username,
-      cfg.Credentials,
-    )
-    if err != nil {
-      panic("failed to create authentication token: " + err.Error())
-    }
+  //   authenticationToken, err := auth.BuildAuthToken(
+  //     db_ctx,
+  //     fmt.Sprintf("%s:%s", db.host, "3306"),
+  //     "us-east-2",
+  //     db.username,
+  //     cfg.Credentials,
+  //   )
+  //   if err != nil {
+  //     panic("failed to create authentication token: " + err.Error())
+  //   }
 
-    db.opts = "?tls=true&allowCleartextPasswords=true" 
-    db.password = authenticationToken
-  } else {
-    db.password = os.Getenv("DB_PASS")
-  }
+  //   db.opts = "?tls=true&allowCleartextPasswords=true" 
+  //   db.password = authenticationToken
+  // } else {
+  //   db.password = os.Getenv("DB_PASS")
+  // }
 
   dsn := fmt.Sprintf(
     "%s:%s@tcp(%s:%s)/%s%s",
