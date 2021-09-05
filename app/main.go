@@ -1,21 +1,21 @@
 package main
 
 import (
-	"context"
-	"database/sql"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"time"
+  // "context"
+  "database/sql"
+  "encoding/json"
+  "fmt"
+  "io/ioutil"
+  "log"
+  "net/http"
+  "os"
+  "time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/rds/auth"
-	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
+  // "github.com/aws/aws-sdk-go-v2/config"
+  // "github.com/aws/aws-sdk-go-v2/feature/rds/auth"
+  "github.com/gin-gonic/gin"
+  _ "github.com/go-sql-driver/mysql"
+  "github.com/joho/godotenv"
 )
 
 type User struct {
