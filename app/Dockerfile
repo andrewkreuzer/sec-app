@@ -12,11 +12,10 @@ COPY *.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o web .
 
 
+FROM ubuntu:latest
+RUN apt update && apt upgrade
 
-FROM alpine:latest
-RUN apk -U upgrade
-
-RUN adduser -h /home/web -u 1000 -D web
+RUN useradd -d /home/web -u 1000 web
 USER web
 
 WORKDIR /home/web
