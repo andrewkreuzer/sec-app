@@ -92,8 +92,17 @@ func main() {
 
   conn := db()
 
-  r := gin.Default()
+  // TODO: why GIN_MODE env var isn't working I don't know
+  if os.Getenv("ENVIRONMENT") == "production" {
+    gin.SetMode(gin.ReleaseMode)
+  }
+  r := gin.New()
+  r.Use(
+    gin.LoggerWithWriter(gin.DefaultWriter, "/health"),
+    gin.Recovery(),
+  )
   r.LoadHTMLFiles("index.html")
+
 
   r.GET("/", func(c *gin.Context) {
     c.HTML(http.StatusOK, "index.html", nil)

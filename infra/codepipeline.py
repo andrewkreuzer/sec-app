@@ -4,7 +4,7 @@ import pulumi
 import pulumi_aws as aws
 
 
-def create_code_pipeline(sec_app_build_name):
+def create_code_pipeline(sec_app_build_name, migrations_lambda_name):
     service_role_for_code_pipeline = aws.iam.Role(
         "KreuzerServiceRoleForCodePipeline",
         assume_role_policy=json.dumps(
@@ -268,7 +268,7 @@ def create_code_pipeline(sec_app_build_name):
                         category="Approval",
                         configuration={},
                         input_artifacts=[],
-                        name="approval",
+                        name="ApproveDeploy",
                         namespace="",
                         output_artifacts=[],
                         owner="AWS",
@@ -306,27 +306,19 @@ def create_code_pipeline(sec_app_build_name):
                         run_order=1,
                         version="1",
                     ),
-                    # aws.codepipeline.PipelineStageActionArgs(
-                    #     category="Deploy",
-                    #     configuration={
-                    #         "ApplicationName": "sec-app",
-                    #         "DeploymentGroupName": "sec-app",
-                    #         "AppSpecTemplateArtifact": "SourceArtifact",
-                    #         "AppSpecTemplatePath": "appspec.yml",
-                    #         "TaskDefinitionTemplatePath": "taskdefinition.json",
-                    #         "TaskDefinitionTemplateArtifact": "SourceArtifact",
-                    #     },
-                    #     input_artifacts=["SourceArtifact"],
-                    #     name="Deploy",
-                    #     namespace="",
-                    #     output_artifacts=[],
-                    #     owner="AWS",
-                    #     provider="CodeDeployToECS",
-                    #     region="us-east-2",
-                    #     role_arn="",
-                    #     run_order=1,
-                    #     version="1",
-                    # ),
+                    aws.codepipeline.PipelineStageActionArgs(
+                        category="Invoke",
+                        input_artifacts=["SourceArtifact"],
+                        name="RunMigrations",
+                        configuration={
+                            "FunctionName": migrations_lambda_name
+                        },
+                        owner="AWS",
+                        provider="Lambda",
+                        region="us-east-2",
+                        run_order=1,
+                        version="1",
+                    ),
                 ],
                 name="Deploy",
             ),

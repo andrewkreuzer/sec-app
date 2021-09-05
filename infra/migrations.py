@@ -97,3 +97,5 @@ def create_migrations_lambda(private_subnet_ids, vpc_id, db_host):
             subnet_ids=private_subnet_ids,
         ),
     )
+
+    return lambda_func.name

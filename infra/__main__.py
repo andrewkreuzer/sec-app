@@ -24,5 +24,5 @@ create_code_deploy(
     tg2_name=tg2_name,
     wl_arn=wl_arn,
 )
-create_migrations_lambda(vpc_id=vpc_id, private_subnet_ids=vpc_private_subnet_ids, db_host=db_host)
-create_code_pipeline(sec_app_build_name=sec_app_build_name)
+migrations_lambda_name = create_migrations_lambda(vpc_id=vpc_id, private_subnet_ids=vpc_private_subnet_ids, db_host=db_host)
+create_code_pipeline(sec_app_build_name=sec_app_build_name, migrations_lambda_name=migrations_lambda_name)
