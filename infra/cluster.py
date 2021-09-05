@@ -151,13 +151,6 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                 "Statement": [
                     {
                         "Effect": "Allow",
-                        "Action": ["s3:*"],
-                        "Resource": [
-                            "*"
-                        ],
-                    },
-                    {
-                        "Effect": "Allow",
                         "Action": ["rds-db:connect"],
                         "Resource": [
                             "arn:aws:rds-db:us-east-2:146427984190:dbuser:*/*"
