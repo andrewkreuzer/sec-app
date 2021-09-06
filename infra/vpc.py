@@ -83,4 +83,35 @@ def create_vpc():
         route_table_ids=[private_subnet_routes.id],
     )
 
+    codepipeline_sec_group = aws.ec2.SecurityGroup(
+        "codepipeline_endpoint",
+        vpc_id=vpc.id,
+        description="Enable codepipeline access",
+        ingress=[
+            aws.ec2.SecurityGroupIngressArgs(
+                protocol="-1",
+                from_port=0,
+                to_port=0,
+                cidr_blocks=["10.0.0.0/16"],
+            )
+        ],
+        egress=[
+            aws.ec2.SecurityGroupEgressArgs(
+                protocol="-1",
+                from_port=0,
+                to_port=0,
+                cidr_blocks=["0.0.0.0/0"],
+            )
+        ],
+    )
+
+    codepipeline_endpoint = aws.ec2.VpcEndpoint(
+        "codepipeline",
+        vpc_id=vpc.id,
+        service_name="com.amazonaws.us-east-2.codepipeline",
+        vpc_endpoint_type="Interface",
+        subnet_ids=private_subnet_ids,
+        security_group_ids=[codepipeline_sec_group.id]
+    )
+
     return vpc.id, public_subnet_ids, private_subnet_ids
