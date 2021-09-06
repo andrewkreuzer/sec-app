@@ -262,25 +262,25 @@ def create_code_pipeline(sec_app_build_name, migrations_lambda_name):
                 ],
                 name="Build",
             ),
-            aws.codepipeline.PipelineStageArgs(
-                actions=[
-                    aws.codepipeline.PipelineStageActionArgs(
-                        category="Approval",
-                        configuration={},
-                        input_artifacts=[],
-                        name="ApproveDeploy",
-                        namespace="",
-                        output_artifacts=[],
-                        owner="AWS",
-                        provider="Manual",
-                        region="us-east-2",
-                        role_arn="",
-                        run_order=1,
-                        version="1",
-                    )
-                ],
-                name="approval",
-            ),
+            # aws.codepipeline.PipelineStageArgs(
+            #     actions=[
+            #         aws.codepipeline.PipelineStageActionArgs(
+            #             category="Approval",
+            #             configuration={},
+            #             input_artifacts=[],
+            #             name="ApproveDeploy",
+            #             namespace="",
+            #             output_artifacts=[],
+            #             owner="AWS",
+            #             provider="Manual",
+            #             region="us-east-2",
+            #             role_arn="",
+            #             run_order=1,
+            #             version="1",
+            #         )
+            #     ],
+            #     name="approval",
+            # ),
             aws.codepipeline.PipelineStageArgs(
                 actions=[
                     aws.codepipeline.PipelineStageActionArgs(

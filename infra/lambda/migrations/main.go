@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline"
+	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	// "github.com/aws/aws-sdk-go-v2/session"
@@ -174,15 +175,27 @@ func handler(ctx context.Context, event events.CodePipelineJobEvent) {
     db.username, db.password, db.host, db.port, db.name,
   )
 
+  codepipelineClient := codepipeline.NewFromConfig(cfg)
+  jobDetails, err := codepipelineClient.GetJobDetails(ctx, &codepipeline.GetJobDetailsInput{ JobId: &jobId })
+  if err != nil {
+    log.Println(err)
+  }
+  executionId := jobDetails.JobDetails.Data.PipelineContext.Action.ActionExecutionId
+  failureString := "Error completing migration"
+  failureDetails :=  types.FailureDetails {
+    Message: &failureString,
+    Type: types.FailureTypeJobFailed,
+    ExternalExecutionId: executionId,
+  }
+
   log.Println("Running migration")
   fileString := fmt.Sprintf("file://%s", filepath.Join(unzipLocation, "migrations"))
   m, err := migrate.New(fileString, dsn)
   if err != nil {
     log.Println(err.Error())
     log.Println("Sending unsuccessful job to Codepipeline")
-    codepipelineClient := codepipeline.NewFromConfig(cfg)
-    successInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId }
-    codepipelineClient.PutJobFailureResult(ctx, &successInput)
+    failedInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId, FailureDetails: &failureDetails }
+    codepipelineClient.PutJobFailureResult(ctx, &failedInput)
     return
   }
 
@@ -192,15 +205,13 @@ func handler(ctx context.Context, event events.CodePipelineJobEvent) {
     } else {
       log.Println(err.Error())
       log.Println("Sending unsuccessful job to Codepipeline")
-      codepipelineClient := codepipeline.NewFromConfig(cfg)
-      successInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId }
-      codepipelineClient.PutJobFailureResult(ctx, &successInput)
+      failedInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId, FailureDetails: &failureDetails }
+      codepipelineClient.PutJobFailureResult(ctx, &failedInput)
       return
     }
   }
 
   log.Println("Sending successful job to Codepipeline")
-  codepipelineClient := codepipeline.NewFromConfig(cfg)
   successInput := codepipeline.PutJobSuccessResultInput{ JobId: &jobId }
   codepipelineClient.PutJobSuccessResult(ctx, &successInput)
 }
