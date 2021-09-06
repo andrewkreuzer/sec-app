@@ -178,14 +178,24 @@ func handler(ctx context.Context, event events.CodePipelineJobEvent) {
   fileString := fmt.Sprintf("file://%s", filepath.Join(unzipLocation, "migrations"))
   m, err := migrate.New(fileString, dsn)
   if err != nil {
-    log.Fatal(err)
+    log.Println(err.Error())
+    log.Println("Sending unsuccessful job to Codepipeline")
+    codepipelineClient := codepipeline.NewFromConfig(cfg)
+    successInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId }
+    codepipelineClient.PutJobFailureResult(ctx, &successInput)
+    return
   }
 
   if err := m.Up(); err != nil {
     if err.Error() == "no change" {
       log.Println(err)
     } else {
-      log.Fatal(err)
+      log.Println(err.Error())
+      log.Println("Sending unsuccessful job to Codepipeline")
+      codepipelineClient := codepipeline.NewFromConfig(cfg)
+      successInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId }
+      codepipelineClient.PutJobFailureResult(ctx, &successInput)
+      return
     }
   }
 
