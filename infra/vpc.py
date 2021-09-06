@@ -23,8 +23,8 @@ def create_vpc():
         "us-east-2c",
     ]
 
-    public_cidr = [ "10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24" ]
-    private_cidr = [ "10.0.100.0/24", "10.0.200.0/24", "10.0.250.0/24" ]
+    public_cidr = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    private_cidr = ["10.0.100.0/24", "10.0.200.0/24", "10.0.250.0/24"]
 
     public_subnet_ids = []
     private_subnet_ids = []
@@ -75,5 +75,12 @@ def create_vpc():
             subnet_id=subnet,
             route_table_id=public_subnet_routes.id,
         )
+
+    s3_endpoint = aws.ec2.VpcEndpoint(
+        "s3",
+        vpc_id=vpc.id,
+        service_name="com.amazonaws.us-east-2.s3",
+        route_table_ids=[private_subnet_routes.id],
+    )
 
     return vpc.id, public_subnet_ids, private_subnet_ids

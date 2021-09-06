@@ -74,6 +74,7 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                 target_group_arn=atg1.arn,
             )
         ],
+        opts=ResourceOptions(ignore_changes=["default_actions"]),
     )
 
     role = aws.iam.Role(
@@ -219,7 +220,7 @@ def create_ecs_cluster(vpc_id, vpc_subnets_ids):
                 container_port=80,
             )
         ],
-        opts=ResourceOptions(depends_on=[wl], ignore_changes=["task_definition"]),
+        opts=ResourceOptions(depends_on=[wl], ignore_changes=["task_definition", "load_balancers"]),
     )
 
     export("url", alb.dns_name)

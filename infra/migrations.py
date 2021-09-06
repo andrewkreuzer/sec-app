@@ -27,7 +27,7 @@ def create_migrations_lambda(private_subnet_ids, vpc_id, db_host):
     iam = aws.iam.Policy(
         "policy",
         path="/",
-        description="My test policy",
+        description="accessRds",
         policy=json.dumps(
             {
                 "Version": "2012-10-17",
@@ -43,19 +43,47 @@ def create_migrations_lambda(private_subnet_ids, vpc_id, db_host):
     )
 
     attach = aws.iam.RolePolicyAttachment(
+        "KreuzerServiceRoleForMigrationsLambdaAttachment",
+        role=migration_lambda_role.name,
+        policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+    )
+
+    attach_iam = aws.iam.RolePolicyAttachment(
         "KreuzerServiceRoleForMigrationsLambdaIAMAttachment",
         role=migration_lambda_role.name,
         policy_arn=iam.arn,
     )
 
-    aws_lambda_vpc_access = aws.iam.get_policy(
-        arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+    codepipeline_permissions = aws.iam.Policy(
+        "lambdaMigrationsCodepipelinePolicy",
+        path="/",
+        description="s3Artifact",
+        policy=json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": ["codepipeline:PutJobSuccessResult"],
+                        "Effect": "Allow",
+                        "Resource": "arn:aws:codepipeline:us-east-2:146427984190:sec-app"
+                    },
+                    {
+                        "Action": ["s3:*"],
+                        "Effect": "Allow",
+                        "Resource": [
+                            "arn:aws:s3:::codepipeline-us-east-2-141992872046",
+                            "arn:aws:s3:::codepipeline-us-east-2-141992872046/*",
+                        ]
+                    }
+                ],
+            }
+        ),
     )
 
-    attach = aws.iam.RolePolicyAttachment(
-        "KreuzerServiceRoleForMigrationsLambdaAttachment",
+    attach_pipeline = aws.iam.RolePolicyAttachment(
+        "KreuzerServiceRoleForMigrationsLambdaArtifactAttach",
         role=migration_lambda_role.name,
-        policy_arn=aws_lambda_vpc_access.arn,
+        policy_arn=codepipeline_permissions.arn,
     )
 
     lambda_sec_group = aws.ec2.SecurityGroup(
