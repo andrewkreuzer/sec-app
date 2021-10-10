@@ -11,12 +11,18 @@ import (
   "os"
   "time"
 
+  "sec-app/middleware"
+
   // "github.com/aws/aws-sdk-go-v2/config"
   // "github.com/aws/aws-sdk-go-v2/feature/rds/auth"
+  "github.com/golang-jwt/jwt"
   "github.com/gin-gonic/gin"
   _ "github.com/go-sql-driver/mysql"
   "github.com/joho/godotenv"
+  "github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 )
+
 
 type User struct {
   Id int
@@ -33,7 +39,171 @@ type DB struct {
   opts string
 }
 
-func db() (*sql.DB) {
+type ginGroups struct {
+  auth *gin.RouterGroup
+}
+
+type Site struct {
+  gin *gin.Engine
+  db  *sql.DB
+  store cookie.Store
+  ginGroups ginGroups
+}
+
+func (s *Site) Init() {
+  if err:= godotenv.Load(); err != nil {
+    log.Fatal("Environment loading failed")
+  }
+  if os.Getenv("ENVIRONMENT") == "production" {
+    gin.SetMode(gin.ReleaseMode)
+  }
+
+  s.store = cookie.NewStore([]byte("secret"))
+  auth := middleware.NewAuth(
+    "sec-app_xBIKJlsidfHguohHHAkajsfagjcSlgWhrkqNmJXU",
+    os.Getenv("JWT_SECRET"),
+  )
+  s.gin.Use(
+    gin.LoggerWithWriter(gin.DefaultWriter, "/health"),
+    gin.Recovery(),
+    sessions.Sessions("default", s.store),
+  )
+  s.gin.LoadHTMLFiles("index.html", "home.html")
+
+  s.ginGroups.auth = s.gin.Group("/")
+  s.ginGroups.auth.Use(
+    auth.Middleware(s.store),
+  )
+
+  s.db = s.dbConnection()
+}
+
+func (s *Site) home(c *gin.Context) {
+  c.HTML(http.StatusOK, "home.html", nil)
+}
+
+func (s *Site) signup(c *gin.Context) {
+  body, _ := ioutil.ReadAll(c.Request.Body)
+  var user User
+  err := json.Unmarshal(body, &user)
+  if err != nil {
+    fmt.Println("error:", err)
+  }
+
+  var dbUser User
+  err = s.db.QueryRow("select ID, Username from Users where Username=?", user.Name).Scan(&dbUser.Id, &dbUser.Name)
+  if err != nil {
+    log.Println(err)
+  }
+
+  if dbUser.Name == user.Name {
+    c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+      "failed": "Username taken",
+    })
+
+    return
+  }
+
+  stmt, err := s.db.Prepare("insert into Users values (NUll, ?, ?)")
+  if err != nil {
+    fmt.Println("error:", err)
+  }
+
+  stmt.Exec(user.Name, user.Password)
+  defer stmt.Close()
+
+  c.JSON(http.StatusOK, gin.H{
+    "body": user.Name,
+  })
+}
+
+func (s *Site) loginPage(c *gin.Context) {
+  c.HTML(http.StatusOK, "index.html", nil)
+}
+
+func (s *Site) login(c *gin.Context) {
+    body, _ := ioutil.ReadAll(c.Request.Body)
+    var requestedUser User
+    err := json.Unmarshal(body, &requestedUser)
+    if err != nil {
+      fmt.Println("error:", err)
+    }
+
+    var dbUser User
+    err = s.db.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
+
+    if (dbUser.Password == requestedUser.Password) {
+      token := jwt.New(jwt.SigningMethodHS256)
+      token.Claims = &middleware.JWTClaims{
+        &jwt.StandardClaims{
+          ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
+          Issuer:    "sec-app.andrewkreuzer.com",
+        },
+        middleware.JWTUserInfo{
+          Name: dbUser.Name,
+          Kind: "basic",
+        },
+      }
+
+      tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+      if err != nil {
+        fmt.Println("error: ", err)
+      }
+
+      c.Header("Authorization", fmt.Sprintf("Bearer %v", tokenString))
+      s := sessions.Default(c)
+      s.Set("Authorization", tokenString)
+      s.Save()
+      c.JSON(http.StatusOK, gin.H{
+        "result": "success",
+      })
+    } else {
+      c.JSON(http.StatusNotFound, gin.H{
+        "result": "failed",
+      })
+    }
+}
+
+func (s *Site) health(c *gin.Context) {
+  c.Status(http.StatusOK)
+}
+
+ func (s *Site) users(c *gin.Context) {
+  rows, err := s.db.Query("select * from Users")
+  if err != nil {
+    fmt.Println("error:", err)
+  }
+
+  users := []string{}
+  for rows.Next() {
+    var (
+      id   int64
+      name string
+      password string
+    )
+    if err := rows.Scan(&id, &name, &password); err != nil {
+      log.Fatal(err)
+    }
+    users = append(users, name)
+  }
+
+  c.JSON(http.StatusOK, gin.H{
+    "users": users,
+  })
+}
+
+func (s *Site) Routes() {
+  s.gin.GET("/", s.loginPage)
+  s.gin.Static("/assets", "./assets")
+  s.gin.GET("/health", s.health)
+  s.gin.POST("/signup", s.signup)
+  s.gin.GET("/login", s.loginPage)
+  s.gin.POST("/login", s.login)
+  s.ginGroups.auth.GET("/home", s.home)
+  s.ginGroups.auth.GET("/users", s.users)
+}
+
+func (s *Site) dbConnection() (*sql.DB) {
   db := DB {
     name: os.Getenv("DB_NAME"),
     username: os.Getenv("DB_USER"),
@@ -76,7 +246,6 @@ func db() (*sql.DB) {
   if err != nil {
     panic(err)
   }
-
   conn.SetConnMaxLifetime(time.Minute * 3)
   conn.SetMaxOpenConns(10)
   conn.SetMaxIdleConns(10)
@@ -85,115 +254,11 @@ func db() (*sql.DB) {
 }
 
 func main() {
-  err := godotenv.Load()
-  if err != nil {
-    log.Fatal("Environment loading failed")
+  site := Site{
+    gin: gin.New(),
   }
 
-  conn := db()
-
-  // TODO: why GIN_MODE env var isn't working I don't know
-  if os.Getenv("ENVIRONMENT") == "production" {
-    gin.SetMode(gin.ReleaseMode)
-  }
-  r := gin.New()
-  r.Use(
-    gin.LoggerWithWriter(gin.DefaultWriter, "/health"),
-    gin.Recovery(),
-  )
-  r.LoadHTMLFiles("index.html")
-
-
-  r.GET("/", func(c *gin.Context) {
-    c.HTML(http.StatusOK, "index.html", nil)
-  })
-
-  r.GET("/health", func(c *gin.Context) {
-    c.Status(http.StatusOK)
-  })
-
-  r.GET("/users", func(c *gin.Context) {
-    rows, err := conn.Query("select * from Users")
-    if err != nil {
-      fmt.Println("error:", err)
-    }
-
-    users := []string{}
-    for rows.Next() {
-      var (
-        id   int64
-        name string
-        password string
-      )
-      if err := rows.Scan(&id, &name, &password); err != nil {
-        log.Fatal(err)
-      }
-      users = append(users, name)
-    }
-
-    c.JSON(http.StatusOK, gin.H{
-      "users": users,
-    })
-  })
-
-  r.POST("/login", func(c *gin.Context) {
-    body, _ := ioutil.ReadAll(c.Request.Body)
-    var requestedUser User
-    err := json.Unmarshal(body, &requestedUser)
-    if err != nil {
-        fmt.Println("error:", err)
-    }
-
-    var dbUser User
-    err = conn.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
-
-    log.Println(dbUser.Password, requestedUser.Password)
-    if (dbUser.Password == requestedUser.Password) {
-      c.JSON(http.StatusOK, gin.H{
-        "result": "logged in",
-      })
-    } else {
-      c.JSON(http.StatusNotFound, gin.H{
-        "result": "failed",
-      })
-    }
-
-  })
-
-  r.POST("/signup", func(c *gin.Context) {
-    body, _ := ioutil.ReadAll(c.Request.Body)
-    var user User
-    err := json.Unmarshal(body, &user)
-    if err != nil {
-        fmt.Println("error:", err)
-    }
-
-    var dbUser User
-    err = conn.QueryRow("select ID, Username from Users where Username=?", user.Name).Scan(&dbUser.Id, &dbUser.Name)
-    if err != nil {
-      log.Println(err)
-    }
-
-    if dbUser.Name == user.Name {
-      c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-        "failed": "Username taken",
-      })
-
-      return
-    }
-
-    stmt, err := conn.Prepare("insert into Users values (NUll, ?, ?)")
-    if err != nil {
-      fmt.Println("error:", err)
-    }
-
-    stmt.Exec(user.Name, user.Password)
-    defer stmt.Close()
-
-    c.JSON(http.StatusOK, gin.H{
-      "body": user.Name,
-    })
-  })
-
-  r.Run()
+  site.Init()
+  site.Routes()
+  site.gin.Run()
 }

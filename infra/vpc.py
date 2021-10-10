@@ -111,7 +111,8 @@ def create_vpc():
         service_name="com.amazonaws.us-east-2.codepipeline",
         vpc_endpoint_type="Interface",
         subnet_ids=private_subnet_ids,
-        security_group_ids=[codepipeline_sec_group.id]
+        security_group_ids=[codepipeline_sec_group.id],
+        private_dns_enabled=True
     )
 
     return vpc.id, public_subnet_ids, private_subnet_ids

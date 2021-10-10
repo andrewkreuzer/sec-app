@@ -3,10 +3,27 @@
 <head>
   <meta charset="utf-8">
   <title>Sec-App</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <h1>Hello, AWS</h1>
-
-
+  <form id="form" actoin="/login" method="POST">
+    <h1>Hello, AWS</h1>
+    <label for="username">Enter Username:</label>
+    <input
+      type="text"
+      id="username"
+      username="username"
+      placeholder="Enter Username"
+    ><br>
+    <label for="username">Enter Username:</label>
+    <input
+      type="text"
+      id="password"
+      username="password"
+      placeholder="Enter Password"
+    ><br>
+    <input type="submit" value="Login" id="submit">
+  </form>
+  <script src="assets/index.js"></script>
 </body>
 </html>

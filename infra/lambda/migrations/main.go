@@ -176,16 +176,9 @@ func handler(ctx context.Context, event events.CodePipelineJobEvent) {
   )
 
   codepipelineClient := codepipeline.NewFromConfig(cfg)
-  jobDetails, err := codepipelineClient.GetJobDetails(ctx, &codepipeline.GetJobDetailsInput{ JobId: &jobId })
-  if err != nil {
-    log.Println(err)
-  }
-  executionId := jobDetails.JobDetails.Data.PipelineContext.Action.ActionExecutionId
-  failureString := "Error completing migration"
   failureDetails :=  types.FailureDetails {
-    Message: &failureString,
+    Message: aws.String("Error completing migration"),
     Type: types.FailureTypeJobFailed,
-    ExternalExecutionId: executionId,
   }
 
   log.Println("Running migration")
@@ -194,7 +187,7 @@ func handler(ctx context.Context, event events.CodePipelineJobEvent) {
   if err != nil {
     log.Println(err.Error())
     log.Println("Sending unsuccessful job to Codepipeline")
-    failedInput := codepipeline.PutJobFailureResultInput{ JobId: &jobId, FailureDetails: &failureDetails }
+    failedInput := codepipeline.PutJobFailureResultInput{ JobId: aws.String(jobId), FailureDetails: &failureDetails }
     codepipelineClient.PutJobFailureResult(ctx, &failedInput)
     return
   }

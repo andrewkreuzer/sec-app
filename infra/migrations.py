@@ -25,7 +25,7 @@ def create_migrations_lambda(private_subnet_ids, vpc_id, db_host):
     )
 
     iam = aws.iam.Policy(
-        "policy",
+        "rdsIAMConnectPolicy",
         path="/",
         description="accessRds",
         policy=json.dumps(
@@ -63,7 +63,17 @@ def create_migrations_lambda(private_subnet_ids, vpc_id, db_host):
                 "Version": "2012-10-17",
                 "Statement": [
                     {
-                        "Action": ["codepipeline:PutJobSuccessResult"],
+                        "Action": [
+                            "codepipeline:GetJobDetails",
+                        ],
+                        "Effect": "Allow",
+                        "Resource": "*"
+                    },
+                    {
+                        "Action": [
+                            "codepipeline:PutJobSuccessResult",
+                            "codepipeline:PutJobFailureResult",
+                        ],
                         "Effect": "Allow",
                         "Resource": "arn:aws:codepipeline:us-east-2:146427984190:sec-app"
                     },
@@ -81,7 +91,7 @@ def create_migrations_lambda(private_subnet_ids, vpc_id, db_host):
     )
 
     attach_pipeline = aws.iam.RolePolicyAttachment(
-        "KreuzerServiceRoleForMigrationsLambdaArtifactAttach",
+        "KreuzerServiceRoleForMigrationsLambdaCodepipelineAttach",
         role=migration_lambda_role.name,
         policy_arn=codepipeline_permissions.arn,
     )
