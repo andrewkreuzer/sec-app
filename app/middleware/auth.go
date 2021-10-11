@@ -1,10 +1,8 @@
 package middleware
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -19,13 +17,13 @@ type Auth struct {
 }
 
 type JWTUserInfo struct {
-  Name string
-  Kind string
+  Name string `json:"name"`
+  Kind string `json:"kind"`
 }
 
 type JWTClaims struct {
+  UserInfo *JWTUserInfo `json:"userInfo"`
   *jwt.StandardClaims
-  JWTUserInfo
 }
 
 func NewAuth(cookieName string, secretkey string) Auth {
@@ -37,30 +35,30 @@ func NewAuth(cookieName string, secretkey string) Auth {
 
 func (a *Auth) Middleware(cookieStore cookie.Store) gin.HandlerFunc {
   return func(c *gin.Context) {
-    authHeader, ok := sessions.Default(c).Get("Authorization").(string)
+    authCookie, ok := sessions.Default(c).Get("Authorization").(string)
     if !ok {
-      log.Println("Authorization Header not found")
+      log.Println("Authorization cookie not found")
       c.Redirect(http.StatusTemporaryRedirect, "/")
+      c.Abort()
+      return
     }
     token, err := jwt.ParseWithClaims(
-      authHeader,
+      authCookie,
       &JWTClaims{},
       func(token *jwt.Token) (interface{}, error) {
-        return []byte(os.Getenv("JWT_TOKEN")), nil
+        return []byte(a.secretkey), nil
     })
     if err != nil {
-      fmt.Println("error:", err)
+      log.Println("token parsing error:", err)
     }
 
     claims, ok := token.Claims.(*JWTClaims)
     if !ok {
-      fmt.Println("couldn't parse claims")
+      log.Println("couldn't parse claims")
     }
     if claims.ExpiresAt < time.Now().UTC().Unix() {
-      fmt.Println("jwt is expired")
+      log.Println("jwt is expired")
     }
-
-    // username := claims.Username
 
     c.Next()
   }

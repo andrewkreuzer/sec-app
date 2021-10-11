@@ -118,6 +118,11 @@ func (s *Site) signup(c *gin.Context) {
 }
 
 func (s *Site) loginPage(c *gin.Context) {
+  // TODO: could this infinite loop? between this as the auth middleware?
+  if sessions.Default(c).Get("Authorization") != nil {
+    c.Redirect(http.StatusTemporaryRedirect, "/home")
+    return
+  }
   c.HTML(http.StatusOK, "index.html", nil)
 }
 
@@ -133,18 +138,22 @@ func (s *Site) login(c *gin.Context) {
     err = s.db.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
 
     if (dbUser.Password == requestedUser.Password) {
-      token := jwt.New(jwt.SigningMethodHS256)
-      token.Claims = &middleware.JWTClaims{
+      // TODO: I don't know go well enough to remove the unkeyed fields warning
+      //       it's due to the JWTClaims struct not being able to state a key
+      //       for the jwt.StandardClaims type and jwt's inability to convert
+      //       JWTCLaims to a Claims type, could implement Valid() but I
+      //       don't want to handle validation
+      claims := middleware.JWTClaims{
+        &middleware.JWTUserInfo{
+          Name: dbUser.Name,
+          Kind: "basic",
+        },
         &jwt.StandardClaims{
           ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
           Issuer:    "sec-app.andrewkreuzer.com",
         },
-        middleware.JWTUserInfo{
-          Name: dbUser.Name,
-          Kind: "basic",
-        },
       }
-
+      token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
       tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
       if err != nil {
         fmt.Println("error: ", err)
@@ -152,6 +161,13 @@ func (s *Site) login(c *gin.Context) {
 
       c.Header("Authorization", fmt.Sprintf("Bearer %v", tokenString))
       s := sessions.Default(c)
+      s.Options(sessions.Options{
+          Path:     "/",
+          Domain:   os.Getenv("APP_URL"),
+          MaxAge:   0,
+          Secure:   true,
+          HttpOnly: true,
+      })
       s.Set("Authorization", tokenString)
       s.Save()
       c.JSON(http.StatusOK, gin.H{
