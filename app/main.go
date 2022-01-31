@@ -54,9 +54,6 @@ func (s *Site) Init() {
   if err:= godotenv.Load(); err != nil {
     log.Fatal("Environment loading failed")
   }
-  if os.Getenv("ENVIRONMENT") == "production" {
-    gin.SetMode(gin.ReleaseMode)
-  }
 
   s.store = cookie.NewStore([]byte("secret"))
   auth := middleware.NewAuth(
