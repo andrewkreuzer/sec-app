@@ -19,7 +19,7 @@ jobs:
       - name: Generate image tag
         id: image
         run: |
-          echo "::set-output name=::tag${{ github.ref_name }}-${GITHUB_SHA::8}-${{ github.run_id }}"
+          echo "::set-output name=tag::${{ github.ref_name }}-${GITHUB_SHA::8}-${{ github.run_id }}"
 
       - name: Checkout repository
         uses: actions/checkout@v3
