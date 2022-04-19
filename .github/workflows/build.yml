@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}:${{ github.ref_name }}-${GITHUB_SHA::8}-${{ github.run_id }}
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
@@ -16,6 +16,11 @@ jobs:
       packages: write
 
     steps:
+      - name: Generate image tag
+        id: image
+        run: |
+          echo "::set-output name=::tag${{ github.ref_name }}-${GITHUB_SHA::8}-${{ github.run_id }}
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -31,4 +36,4 @@ jobs:
         with:
           context: ./app
           push: true
-          tags: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_NAME }}:${{ steps.image.outputs.tag }}
