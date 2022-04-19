@@ -14,7 +14,7 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.14.2
+      - name: sec-app
+        image: ghcr.io/andrewkreuzer/sec-app:main-4deac0f2-2192313301
         ports:
         - containerPort: 80
