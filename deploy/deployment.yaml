@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: sec-app
-        image: ghcr.io/andrewkreuzer/sec-app:main-4deac0f2-2192313301 # {"$imagepolicy": "flux-system:sec-app"}
+        image: ghcr.io/andrewkreuzer/sec-app:main-a27e15ff-2192321406 # {"$imagepolicy": "flux-system:sec-app"}
         ports:
         - containerPort: 80
