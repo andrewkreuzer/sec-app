@@ -14,7 +14,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o web .
 
 
 FROM ubuntu:latest
-RUN apt update && apt upgrade
+RUN apt-get update && apt upgrade -y
 
 RUN useradd -d /home/web -u 1000 web
 # USER web
