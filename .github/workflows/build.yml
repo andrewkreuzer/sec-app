@@ -2,6 +2,7 @@ name: Create and publish a Docker image
 
 on:
   push:
+    paths: "app/**"
     branches: ['main']
 
 env:
