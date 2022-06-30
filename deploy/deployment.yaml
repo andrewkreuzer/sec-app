@@ -39,12 +39,6 @@ metadata:
   namespace: sec-app
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    # cert-manager.io/cluster-issuer: "letsencrypt"
-# spec:
-  # tls:
-    # - hosts:
-    #   - sec-app.andrewkreuzer.com
-    #   secretName: letsencrypt
 spec:
   rules:
   - host: sec-app.andrewkreuzer.com
