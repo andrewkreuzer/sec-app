@@ -21,11 +21,11 @@ spec:
         env:
           - name: DB_USER
             valueFrom:
-              secretRef:
+              secretKeyRef:
                 name: mariadb-secrets
                 key: user
           - name: DB_PASS
             valueFrom:
-              secretRef:
+              secretKeyRef:
                 name: mariadb-secrets
                 key: password
