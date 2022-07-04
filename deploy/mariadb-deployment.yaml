@@ -35,6 +35,20 @@ spec:
               name: mariadb-secrets
               key: password
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: sec-app
+spec:
+  selector:
+    app:  mariadb
+  ports:
+  - name: mariadb
+    protocol: TCP
+    port: 3306
+    targetPort: 3306
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
