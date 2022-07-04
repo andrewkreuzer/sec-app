@@ -1,7 +1,0 @@
-name: sec-app
-description: not sure yet
-runtime:
-  name: python
-  options:
-    virtualenv: venv
-
