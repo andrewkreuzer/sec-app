@@ -21,17 +21,17 @@ spec:
         env:
         - name: MARIADB_ROOT_PASSWORD
           valueFrom:
-            secretRef:
+            secretKeyRef:
               name: mariadb-secrets
               key: root
         - name: MARIADB_USER
           valueFrom:
-            secretRef:
+            secretKeyRef:
               name: mariadb-secrets
               key: user
         - name: MARIADB_PASSWORD
           valueFrom:
-            secretRef:
+            secretKeyRef:
               name: mariadb-secrets
               key: password
 ---
