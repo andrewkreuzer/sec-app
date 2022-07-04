@@ -18,7 +18,7 @@ spec:
         image: docker.io/library/mariadb:latest
         ports:
         - containerPort: 3306
-      env:
+        env:
         - name: MARIADB_ROOT_PASSWORD
           valueFrom:
             secretRef:
@@ -34,7 +34,6 @@ spec:
             secretRef:
               name: mariadb-secrets
               key: password
-
 ---
 apiVersion: batch/v1
 kind: Job
@@ -46,11 +45,7 @@ spec:
     spec:
       containers:
       - name: migrate
-        image: migrate/migrate
-        command:
-          - "-path=./migrations/"
-          - "-database=mysql://$DB_USER:$DB_PASS@tcp(mariadb:3306)/database"
-          - "up"
+        image: ghcr.io/andrewkreuzer/sec-app/migrate:latest
         env:
           - name: DB_USER
             valueFrom:
