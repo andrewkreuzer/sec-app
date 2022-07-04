@@ -51,16 +51,16 @@ spec:
           - "-path=./migrations/"
           - "-database=mysql://$DB_USER:$DB_PASS@tcp(mariadb:3306)/database"
           - "up"
+        env:
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secrets
+                key: user
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secrets
+                key: password
       restartPolicy: Never
-      env:
-        - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secrets
-              key: user
-        - name: DB_PASS
-          valueFrom:
-            secretKeyRef:
-              name: mariadb-secrets
-              key: password
   backoffLimit: 1
