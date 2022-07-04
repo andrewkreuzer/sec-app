@@ -16,5 +16,17 @@ spec:
       containers:
       - name: sec-app
         image: ghcr.io/andrewkreuzer/sec-app:main-239ee8e0-2612519654 # {"$imagepolicy": "flux-system:sec-app"}
+
         ports:
         - containerPort: 80
+        env:
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secrets
+                key: user
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-secrets
+                key: password
