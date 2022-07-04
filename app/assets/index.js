@@ -7,7 +7,7 @@ async function processLogin(event) {
     console.log("Empty inputs");
     return
   }
-  const url = "http://localhost:3000/login";
+  const url = "https://sec-app.andrewkreuzer.com/login";
   const data = { "name": username, "password": password };
   const response = await fetch(url, {
     method: 'POST',

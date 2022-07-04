@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: sec-app
+spec:
+  selector:
+    matchLabels:
+      app: mariadb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: docker.io/library/mariadb:latest
+        ports:
+        - containerPort: 3306
+      env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretRef:
+              name: mariadb-secrets
+              key: root
+        - name: MARIADB_USER
+          valueFrom:
+            secretRef:
+              name: mariadb-secrets
+              key: user
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretRef:
+              name: mariadb-secrets
+              key: password
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mariadb-migration
+  namespace: sec-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate
+        image: migrate/migrate
+        command:
+          - "-path=./migrations/"
+          - "-database=mysql://$DB_USER:$DB_PASS@tcp(mariadb:3306)/database"
+          - "up"
+      restartPolicy: Never
+      env:
+        - name: DB_USER
+          valueFrom:
+            secretRef:
+              name: mariadb-secrets
+              key: user
+        - name: DB_PASS
+          valueFrom:
+            secretRef:
+              name: mariadb-secrets
+              key: password
+  backoffLimit: 1

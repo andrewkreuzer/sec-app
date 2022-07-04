@@ -1,7 +1,6 @@
 package main
 
 import (
-  // "context"
   "database/sql"
   "encoding/json"
   "fmt"
@@ -13,14 +12,12 @@ import (
 
   "sec-app/middleware"
 
-  // "github.com/aws/aws-sdk-go-v2/config"
-  // "github.com/aws/aws-sdk-go-v2/feature/rds/auth"
   "github.com/golang-jwt/jwt"
   "github.com/gin-gonic/gin"
   _ "github.com/go-sql-driver/mysql"
   "github.com/joho/godotenv"
   "github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+  "github.com/gin-contrib/sessions/cookie"
 )
 
 
@@ -124,57 +121,52 @@ func (s *Site) loginPage(c *gin.Context) {
 }
 
 func (s *Site) login(c *gin.Context) {
-    body, _ := ioutil.ReadAll(c.Request.Body)
-    var requestedUser User
-    err := json.Unmarshal(body, &requestedUser)
+  body, _ := ioutil.ReadAll(c.Request.Body)
+  var requestedUser User
+  err := json.Unmarshal(body, &requestedUser)
+  if err != nil {
+    fmt.Println("error:", err)
+  }
+
+  var dbUser User
+  err = s.db.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
+
+  if (dbUser.Password == requestedUser.Password) {
+    claims := middleware.JWTClaims{
+      &middleware.JWTUserInfo{
+        Name: dbUser.Name,
+        Kind: "basic",
+      },
+      &jwt.StandardClaims{
+        ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
+        Issuer:    "sec-app.andrewkreuzer.com",
+      },
+    }
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
+    tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
     if err != nil {
-      fmt.Println("error:", err)
+      fmt.Println("error: ", err)
     }
 
-    var dbUser User
-    err = s.db.QueryRow("select ID, Username, Password from Users where Username=?", requestedUser.Name).Scan(&dbUser.Id, &dbUser.Name, &dbUser.Password)
-
-    if (dbUser.Password == requestedUser.Password) {
-      // TODO: I don't know go well enough to remove the unkeyed fields warning
-      //       it's due to the JWTClaims struct not being able to state a key
-      //       for the jwt.StandardClaims type and jwt's inability to convert
-      //       JWTCLaims to a Claims type, could implement Valid() but I
-      //       don't want to handle validation
-      claims := middleware.JWTClaims{
-        &middleware.JWTUserInfo{
-          Name: dbUser.Name,
-          Kind: "basic",
-        },
-        &jwt.StandardClaims{
-          ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
-          Issuer:    "sec-app.andrewkreuzer.com",
-        },
-      }
-      token := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
-      tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-      if err != nil {
-        fmt.Println("error: ", err)
-      }
-
-      c.Header("Authorization", fmt.Sprintf("Bearer %v", tokenString))
-      s := sessions.Default(c)
-      s.Options(sessions.Options{
-          Path:     "/",
-          Domain:   os.Getenv("APP_URL"),
-          MaxAge:   0,
-          Secure:   true,
-          HttpOnly: true,
-      })
-      s.Set("Authorization", tokenString)
-      s.Save()
-      c.JSON(http.StatusOK, gin.H{
-        "result": "success",
-      })
-    } else {
-      c.JSON(http.StatusNotFound, gin.H{
-        "result": "failed",
-      })
-    }
+    c.Header("Authorization", fmt.Sprintf("Bearer %v", tokenString))
+    s := sessions.Default(c)
+    s.Options(sessions.Options{
+      Path:     "/",
+      Domain:   os.Getenv("APP_URL"),
+      MaxAge:   0,
+      Secure:   true,
+      HttpOnly: true,
+    })
+    s.Set("Authorization", tokenString)
+    s.Save()
+    c.JSON(http.StatusOK, gin.H{
+      "result": "success",
+    })
+  } else {
+    c.JSON(http.StatusNotFound, gin.H{
+      "result": "failed",
+    })
+  }
 }
 
 func (s *Site) health(c *gin.Context) {
@@ -225,30 +217,6 @@ func (s *Site) dbConnection() (*sql.DB) {
 
     password: os.Getenv("DB_PASS"),
   }
-
-  // if os.Getenv("ENVIRONMENT") != "dev" {
-  //   db_ctx := context.Background()
-  //   cfg, err := config.LoadDefaultConfig(db_ctx)
-  //   if err != nil {
-  //     panic("configuration error: " + err.Error())
-  //   }
-
-  //   authenticationToken, err := auth.BuildAuthToken(
-  //     db_ctx,
-  //     fmt.Sprintf("%s:%s", db.host, "3306"),
-  //     "us-east-2",
-  //     db.username,
-  //     cfg.Credentials,
-  //   )
-  //   if err != nil {
-  //     panic("failed to create authentication token: " + err.Error())
-  //   }
-
-  //   db.opts = "?tls=true&allowCleartextPasswords=true" 
-  //   db.password = authenticationToken
-  // } else {
-  //   db.password = os.Getenv("DB_PASS")
-  // }
 
   dsn := fmt.Sprintf(
     "%s:%s@tcp(%s:%s)/%s%s",
